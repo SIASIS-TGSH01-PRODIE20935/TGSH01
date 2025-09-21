@@ -1,0 +1,562 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("RDP02_INS1_DATABASE_URL")
+}
+
+model T_Directivos {
+  Id_Directivo           Int     @id @default(autoincrement())
+  Nombres                String  @db.VarChar(60)
+  Apellidos              String  @db.VarChar(60)
+  Genero                 String  @db.VarChar(1)
+  Identificador_Nacional String  @unique @db.VarChar(20)
+  Nombre_Usuario         String  @unique @db.VarChar(40)
+  Correo_Electronico     String  @db.VarChar(70)
+  Celular                String  @db.VarChar(9)
+  Contraseña            String  @db.Text
+  Google_Drive_Foto_ID   String? @db.Text
+
+  // Nuevas relaciones con directivos
+  horarios_por_dias T_Horarios_Por_Dias_Directivos[]
+  registros_entrada T_Control_Entrada_Mensual_Directivos[]
+  registros_salida  T_Control_Salida_Mensual_Directivos[]
+
+  @@map("T_Directivos")
+}
+
+model T_Estudiantes {
+  Id_Estudiante            String             @id @db.VarChar(20)
+  Nombres                  String             @db.VarChar(60)
+  Apellidos                String             @db.VarChar(60)
+  Estado                   Boolean
+  Google_Drive_Foto_ID     String?            @db.Text
+  Id_Aula                  Int?
+  aula                     T_Aulas?           @relation(fields: [Id_Aula], references: [Id_Aula])
+  relaciones               T_Relaciones_E_R[]
+  asistencias_primaria     T_A_E_P_1[]
+  asistencias_primaria_2   T_A_E_P_2[]
+  asistencias_primaria_3   T_A_E_P_3[]
+  asistencias_primaria_4   T_A_E_P_4[]
+  asistencias_primaria_5   T_A_E_P_5[]
+  asistencias_primaria_6   T_A_E_P_6[]
+  asistencias_secundaria_1 T_A_E_S_1[]
+  asistencias_secundaria_2 T_A_E_S_2[]
+  asistencias_secundaria_3 T_A_E_S_3[]
+  asistencias_secundaria_4 T_A_E_S_4[]
+  asistencias_secundaria_5 T_A_E_S_5[]
+
+  @@map("T_Estudiantes")
+}
+
+model T_Responsables {
+  Id_Responsable       String             @id @db.VarChar(20)
+  Nombres              String             @db.VarChar(60)
+  Apellidos            String             @db.VarChar(60)
+  Nombre_Usuario       String             @unique @db.VarChar(40)
+  Celular              String?            @db.VarChar(9)
+  Contraseña          String             @db.Text
+  Google_Drive_Foto_ID String?            @db.Text
+  relaciones           T_Relaciones_E_R[]
+
+  @@map("T_Responsables")
+}
+
+model T_Relaciones_E_R {
+  Id_Relacion    Int            @id @default(autoincrement())
+  Tipo           String         @db.VarChar(1) // Reemplazado ENUM por VARCHAR(1)
+  Id_Responsable String         @db.VarChar(20)
+  Id_Estudiante  String         @db.VarChar(20)
+  responsable    T_Responsables @relation(fields: [Id_Responsable], references: [Id_Responsable])
+  estudiante     T_Estudiantes  @relation(fields: [Id_Estudiante], references: [Id_Estudiante])
+
+  @@map("T_Relaciones_E_R")
+}
+
+model T_Profesores_Primaria {
+  Id_Profesor_Primaria String                                          @id @db.VarChar(20)
+  Nombres              String                                          @db.VarChar(60)
+  Apellidos            String                                          @db.VarChar(60)
+  Genero               String                                          @db.VarChar(1)
+  Nombre_Usuario       String                                          @unique @db.VarChar(40)
+  Estado               Boolean
+  Correo_Electronico   String?                                         @db.VarChar(70)
+  Celular              String                                          @db.VarChar(9)
+  Contraseña          String                                          @db.Text
+  Google_Drive_Foto_ID String?                                         @db.Text
+  aulas                T_Aulas[]
+  registros_entrada    T_Control_Entrada_Mensual_Profesores_Primaria[]
+  registros_salida     T_Control_Salida_Mensual_Profesores_Primaria[]
+
+  @@map("T_Profesores_Primaria")
+}
+
+model T_Profesores_Secundaria {
+  Id_Profesor_Secundaria String                                            @id @db.VarChar(20)
+  Nombres                String                                            @db.VarChar(60)
+  Apellidos              String                                            @db.VarChar(60)
+  Genero                 String                                            @db.VarChar(1) // Reemplazado ENUM por VARCHAR(1)
+  Nombre_Usuario         String                                            @unique @db.VarChar(40)
+  Estado                 Boolean
+  Correo_Electronico     String?                                           @db.VarChar(70)
+  Celular                String                                            @db.VarChar(9)
+  Contraseña            String                                            @db.Text
+  Google_Drive_Foto_ID   String?                                           @db.Text
+  aulas                  T_Aulas[]
+  cursos                 T_Cursos_Horario[]
+  registros_entrada      T_Control_Entrada_Mensual_Profesores_Secundaria[]
+  registros_salida       T_Control_Salida_Mensual_Profesores_Secundaria[]
+
+  @@map("T_Profesores_Secundaria")
+}
+
+model T_Aulas {
+  Id_Aula                Int                      @id @default(autoincrement())
+  Nivel                  String                   @db.VarChar(10) // Reemplazado ENUM por VARCHAR(10)
+  Grado                  Int                      @db.Integer
+  Seccion                String                   @db.VarChar(2)
+  Color                  String                   @db.VarChar(15)
+  Id_Profesor_Primaria   String?                  @db.VarChar(20)
+  Id_Profesor_Secundaria String?                  @db.VarChar(20)
+  profesor_primaria      T_Profesores_Primaria?   @relation(fields: [Id_Profesor_Primaria], references: [Id_Profesor_Primaria])
+  profesor_secundaria    T_Profesores_Secundaria? @relation(fields: [Id_Profesor_Secundaria], references: [Id_Profesor_Secundaria])
+  estudiantes            T_Estudiantes[]
+  cursos_horario         T_Cursos_Horario[]
+
+  @@map("T_Aulas")
+}
+
+model T_Cursos_Horario {
+  Id_Curso_Horario             Int                     @id @default(autoincrement())
+  Nombre_Curso                 String                  @db.VarChar(75)
+  Dia_Semana                   Int                     @db.Integer
+  Indice_Hora_Academica_Inicio Int                     @db.Integer
+  Cant_Hora_Academicas         Int                     @db.Integer
+  Id_Profesor_Secundaria       String                  @db.VarChar(20)
+  Id_Aula_Secundaria           Int
+  profesor_secundaria          T_Profesores_Secundaria @relation(fields: [Id_Profesor_Secundaria], references: [Id_Profesor_Secundaria])
+  aula                         T_Aulas                 @relation(fields: [Id_Aula_Secundaria], references: [Id_Aula])
+
+  @@map("T_Cursos_Horario")
+}
+
+model T_Control_Entrada_Mensual_Profesores_Primaria {
+  Id_C_E_M_P_Profesores_Primaria Int                   @id @default(autoincrement())
+  Mes                            Int                   @db.Integer
+  Entradas                       Json
+  Id_Profesor_Primaria           String                @db.VarChar(20)
+  profesor_primaria              T_Profesores_Primaria @relation(fields: [Id_Profesor_Primaria], references: [Id_Profesor_Primaria])
+
+  @@map("T_Control_Entrada_Mensual_Profesores_Primaria")
+}
+
+model T_Control_Salida_Mensual_Profesores_Primaria {
+  Id_C_E_M_P_Profesores_Primaria Int                   @id @default(autoincrement())
+  Mes                            Int                   @db.Integer
+  Salidas                        Json
+  Id_Profesor_Primaria           String                @db.VarChar(20)
+  profesor_primaria              T_Profesores_Primaria @relation(fields: [Id_Profesor_Primaria], references: [Id_Profesor_Primaria])
+
+  @@map("T_Control_Salida_Mensual_Profesores_Primaria")
+}
+
+model T_Control_Entrada_Mensual_Profesores_Secundaria {
+  Id_C_E_M_P_Profesores_Secundaria Int                     @id @default(autoincrement())
+  Mes                              Int                     @db.Integer
+  Entradas                         Json
+  Id_Profesor_Secundaria           String                  @db.VarChar(20)
+  profesor_secundaria              T_Profesores_Secundaria @relation(fields: [Id_Profesor_Secundaria], references: [Id_Profesor_Secundaria])
+
+  @@map("T_Control_Entrada_Mensual_Profesores_Secundaria")
+}
+
+model T_Control_Salida_Mensual_Profesores_Secundaria {
+  Id_C_E_M_P_Profesores_Secundaria Int                     @id @default(autoincrement())
+  Mes                              Int                     @db.Integer
+  Salidas                          Json
+  Id_Profesor_Secundaria           String                  @db.VarChar(20)
+  profesor_secundaria              T_Profesores_Secundaria @relation(fields: [Id_Profesor_Secundaria], references: [Id_Profesor_Secundaria])
+
+  @@map("T_Control_Salida_Mensual_Profesores_Secundaria")
+}
+
+model T_Auxiliares {
+  Id_Auxiliar          String  @id @db.VarChar(20)
+  Nombres              String  @db.VarChar(60)
+  Apellidos            String  @db.VarChar(60)
+  Genero               String  @db.VarChar(1) // Reemplazado ENUM por VARCHAR(1)
+  Nombre_Usuario       String  @unique @db.VarChar(40)
+  Estado               Boolean
+  Correo_Electronico   String? @db.VarChar(70)
+  Celular              String  @db.VarChar(9)
+  Contraseña          String  @db.Text
+  Google_Drive_Foto_ID String? @db.Text
+
+  registros_entrada T_Control_Entrada_Mensual_Auxiliar[]
+  registros_salida  T_Control_Salida_Mensual_Auxiliar[]
+
+  @@map("T_Auxiliares")
+}
+
+model T_Control_Entrada_Mensual_Auxiliar {
+  Id_C_E_M_P_Auxiliar Int          @id @default(autoincrement())
+  Mes                 Int          @db.SmallInt
+  Entradas            Json
+  Id_Auxiliar         String       @db.VarChar(20)
+  auxiliar            T_Auxiliares @relation(fields: [Id_Auxiliar], references: [Id_Auxiliar])
+
+  @@map("T_Control_Entrada_Mensual_Auxiliar")
+}
+
+model T_Control_Salida_Mensual_Auxiliar {
+  Id_C_E_M_P_Auxiliar Int          @id @default(autoincrement())
+  Mes                 Int          @db.SmallInt
+  Salidas             Json
+  Id_Auxiliar         String       @db.VarChar(20)
+  auxiliar            T_Auxiliares @relation(fields: [Id_Auxiliar], references: [Id_Auxiliar])
+
+  @@map("T_Control_Salida_Mensual_Auxiliar")
+}
+
+// TABLA MODIFICADA: Se removieron Horario_Laboral_Entrada y Horario_Laboral_Salida
+model T_Personal_Administrativo {
+  Id_Personal_Administrativo String  @id @db.VarChar(20)
+  Nombres                    String  @db.VarChar(60)
+  Apellidos                  String  @db.VarChar(60)
+  Genero                     String  @db.VarChar(1) // Reemplazado ENUM por VARCHAR(1)
+  Nombre_Usuario             String  @unique @db.VarChar(40)
+  Estado                     Boolean
+  Celular                    String  @db.VarChar(9)
+  Contraseña                String  @db.Text
+  Google_Drive_Foto_ID       String? @db.Text
+  Cargo                      String  @db.VarChar(75)
+
+  // Relaciones existentes
+  registros_entrada T_Control_Entrada_Mensual_Personal_Administrativo[]
+  registros_salida  T_Control_Salida_Mensual_Personal_Administrativo[]
+
+  // Nueva relación con horarios por días
+  horarios_por_dias T_Horarios_Por_Dias_Personal_Administrativo[]
+
+  @@map("T_Personal_Administrativo")
+}
+
+// NUEVA TABLA: Horarios por días para Personal Administrativo
+model T_Horarios_Por_Dias_Personal_Administrativo {
+  Id_Horario_Por_Dia_P_Administrativo Int                       @id @default(autoincrement())
+  Dia                                 Int                       @db.SmallInt // 1-5 (Lunes a Viernes)
+  Hora_Inicio                         DateTime                  @db.Time
+  Hora_Fin                            DateTime                  @db.Time
+  Id_Personal_Administrativo          String                    @db.VarChar(20)
+  personal_administrativo             T_Personal_Administrativo @relation(fields: [Id_Personal_Administrativo], references: [Id_Personal_Administrativo])
+
+  @@map("T_Horarios_Por_Dias_Personal_Administrativo")
+}
+
+model T_Control_Entrada_Mensual_Personal_Administrativo {
+  Id_C_E_M_P_Administrativo  Int                       @id @default(autoincrement())
+  Mes                        Int                       @db.SmallInt
+  Entradas                   Json
+  Id_Personal_Administrativo String                    @db.VarChar(20)
+  personal_administrativo    T_Personal_Administrativo @relation(fields: [Id_Personal_Administrativo], references: [Id_Personal_Administrativo])
+
+  @@map("T_Control_Entrada_Mensual_Personal_Administrativo")
+}
+
+model T_Control_Salida_Mensual_Personal_Administrativo {
+  Id_C_E_M_P_Administrativo  Int                       @id @default(autoincrement())
+  Mes                        Int                       @db.SmallInt
+  Salidas                    Json
+  Id_Personal_Administrativo String                    @db.VarChar(20)
+  personal_administrativo    T_Personal_Administrativo @relation(fields: [Id_Personal_Administrativo], references: [Id_Personal_Administrativo])
+
+  @@map("T_Control_Salida_Mensual_Personal_Administrativo")
+}
+
+// NUEVA TABLA: Horarios por días para Directivos
+model T_Horarios_Por_Dias_Directivos {
+  Id_Horario_Por_Dia_Directivo Int          @id @default(autoincrement())
+  Dia                          Int          @db.SmallInt // 1-5 (Lunes a Viernes)
+  Hora_Inicio                  DateTime     @db.Time
+  Hora_Fin                     DateTime     @db.Time
+  Id_Directivo                 Int
+  directivo                    T_Directivos @relation(fields: [Id_Directivo], references: [Id_Directivo])
+
+  @@map("T_Horarios_Por_Dias_Directivos")
+}
+
+// NUEVA TABLA: Control de entrada mensual para Directivos
+model T_Control_Entrada_Mensual_Directivos {
+  Id_C_E_M_P_Directivo Int          @id @default(autoincrement())
+  Mes                  Int          @db.SmallInt
+  Entradas             Json
+  Id_Directivo         Int
+  directivo            T_Directivos @relation(fields: [Id_Directivo], references: [Id_Directivo])
+
+  @@map("T_Control_Entrada_Mensual_Directivos")
+}
+
+// NUEVA TABLA: Control de salida mensual para Directivos
+model T_Control_Salida_Mensual_Directivos {
+  Id_C_S_M_P_Directivo Int          @id @default(autoincrement())
+  Mes                  Int          @db.SmallInt
+  Salidas              Json
+  Id_Directivo         Int
+  directivo            T_Directivos @relation(fields: [Id_Directivo], references: [Id_Directivo])
+
+  @@map("T_Control_Salida_Mensual_Directivos")
+}
+
+model T_Bloqueo_Roles {
+  Rol                  String  @id @db.VarChar(3)
+  Bloqueo_Total        Boolean
+  Timestamp_Desbloqueo BigInt // Timestamp Unix para el desbloqueo
+
+  @@map("T_Bloqueo_Roles")
+}
+
+model T_Ajustes_Generales_Sistema {
+  Id_Constante        Int      @id @default(autoincrement())
+  Nombre              String   @unique @db.VarChar(100)
+  Valor               String   @db.VarChar(30)
+  Descripcion         String   @db.Text
+  Ultima_Modificacion DateTime @default(now())
+
+  @@map("T_Ajustes_Generales_Sistema")
+}
+
+model T_Horarios_Asistencia {
+  Id_Horario          Int      @id @default(autoincrement())
+  Nombre              String   @unique @db.VarChar(100)
+  Valor               DateTime @db.Time
+  Descripcion         String   @db.Text
+  Ultima_Modificacion DateTime @default(now())
+
+  @@map("T_Horarios_Asistencia")
+}
+
+model T_Eventos {
+  Id_Evento        Int      @id @default(autoincrement())
+  Nombre           String   @db.VarChar(150)
+  Fecha_Inicio     DateTime @db.Date
+  Fecha_Conclusion DateTime @db.Date
+
+  @@map("T_Eventos")
+}
+
+model T_Registro_Fallos_Sistema {
+  Id_Registro_Fallo_Sistema Int      @id @default(autoincrement())
+  Fecha                     DateTime @db.Date
+  Componente                String   @db.VarChar(50)
+  Detalles                  String?  @db.Text
+
+  @@map("T_Registro_Fallos_Sistema")
+}
+
+model T_Codigos_OTP {
+  Id_Codigo_OTP    Int    @id @default(autoincrement())
+  Codigo           String @db.VarChar(6)
+  Fecha_Creacion   BigInt // Timestamp Unix en milisegundos
+  Fecha_Expiracion BigInt // Timestamp Unix en milisegundos
+  Correo_Destino   String @db.VarChar(70)
+  Rol_Usuario      String @db.VarChar(2)
+  Id_Usuario       String @db.VarChar(20)
+
+  @@map("T_Codigos_OTP")
+}
+
+// TABLAS DE ASISTENCIA PRIMARIA (6 tablas)
+
+model T_A_E_P_1 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_P_2 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_P_3 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_P_4 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_P_5 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_P_6 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+// TABLAS DE ASISTENCIA SECUNDARIA (5 tablas)
+
+model T_A_E_S_1 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_S_2 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_S_3 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_S_4 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_A_E_S_5 {
+  Id_Asistencia_Escolar_Mensual String @id
+  Id_Estudiante                 String @db.VarChar(20)
+  Mes                           Int    @db.SmallInt
+  Asistencias_Mensuales         String @db.Text
+
+  estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
+
+  @@index([Id_Estudiante])
+  @@index([Mes])
+}
+
+model T_Comunicados {
+  Id_Comunicado          Int      @id @default(autoincrement())
+  Titulo                 String   @db.VarChar(150)
+  Contenido              String   @db.Text
+  Fecha_Inicio           DateTime @db.Date
+  Fecha_Conclusion       DateTime @db.Date
+  Google_Drive_Imagen_ID String?  @db.Text
+}
+
+model T_Ultima_Modificacion_Tablas {
+  Nombre_Tabla         String   @id @db.VarChar(100)
+  Operacion            String   @db.VarChar(20) // INSERT, UPDATE, DELETE
+  Fecha_Modificacion   DateTime @default(now())
+  Usuario_Modificacion String?  @db.VarChar(100)
+  Cantidad_Filas       Int?     @db.Integer
+
+  @@map("T_Ultima_Modificacion_Tablas")
+}
+
+model T_Fechas_Importantes {
+  Id_Fecha_Importante Int      @id @default(autoincrement())
+  Nombre              String   @db.VarChar(100)
+  Valor               DateTime @db.Date
+  Descripcion         String?  @db.Text
+  Ultima_Modificacion DateTime @default(now())
+
+  @@map("T_Fechas_Importantes")
+}
+
+model T_Archivos_Respaldo_Google_Drive {
+  Id_Archivo_Respaldo Int      @id @default(autoincrement())
+  Nombre_Archivo      String   @unique @db.VarChar(255)
+  Google_Drive_Id     String   @unique
+  Descripcion         String?  @db.Text
+  Ultima_Modificacion DateTime @default(now())
+}
+
+model T_Vacaciones_Interescolares {
+  Id_Vacacion_Interescolar Int      @id @default(autoincrement())
+  Fecha_Inicio             DateTime @db.Date
+  Fecha_Conclusion         DateTime @db.Date
+
+  @@map("T_Vacaciones_Interescolares")
+}
+
+model T_Modificaciones_Especificas {
+  Id_Modificacion_Especifica     String   @id @default(uuid()) @db.VarChar(100)
+  Nombre_Tabla                   String   @db.Text
+  Campos_Identificadores         String   @db.Text //Separados por comas
+  Valores_Campos_Identificadores String   @db.Text //Separados por comas
+  Id_Registro_Modificado         String   @db.Text
+  Fecha_Modificacion             DateTime @default(now())
+  Ultima_Operacion               String // INSERT, UPDATE, DELETE
+  Contador_Modificaciones        Int      @default(1)
+
+  @@map("T_Modificaciones_Especificas")
+}
